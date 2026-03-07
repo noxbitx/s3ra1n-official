@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>s3ra1n — An Experimental Ra1n Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b0f;
+    --surface: #0d1117;
+    --border: #1e2a38;
+    --blue: #3b9eff;
+    --blue-dim: #1a4a7a;
+    --purple: #7c5cbf;
+    --text: #c9d1d9;
+    --text-dim: #6e7b8a;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --white: #f0f6fc;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    overflow-x: hidden;
+  }
+
+  /* RAIN CANVAS */
+  #rain {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.08;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(30,42,56,0.6);
+    backdrop-filter: blur(20px);
+    background: rgba(8,11,15,0.8);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--white);
+    letter-spacing: -0.02em;
+  }
+
+  .nav-logo span { color: var(--blue); }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--blue); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 2rem 4rem;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .hero-banner {
+    width: min(860px, 92vw);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow:
+      0 0 80px rgba(59,158,255,0.08),
+      0 0 200px rgba(124,92,191,0.06),
+      0 40px 80px rgba(0,0,0,0.6);
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-badge {
+    margin-top: 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(59,158,255,0.06);
+    border: 1px solid rgba(59,158,255,0.2);
+    border-radius: 99px;
+    padding: 0.4rem 1rem;
+    font-size: 0.7rem;
+    color: var(--blue);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    animation: fadeUp 0.8s 0.15s ease both;
+  }
+
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--blue);
+    animation: pulse 2s infinite;
+  }
+
+  .hero-title {
+    margin-top: 1.2rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    color: var(--white);
+    text-align: center;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    animation: fadeUp 0.8s 0.25s ease both;
+  }
+
+  .hero-title span { color: var(--blue); }
+
+  .hero-sub {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    text-align: center;
+    max-width: 540px;
+    line-height: 1.8;
+    animation: fadeUp 0.8s 0.35s ease both;
+  }
+
+  .hero-cta {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadeUp 0.8s 0.45s ease both;
+  }
+
+  .btn {
+    padding: 0.65rem 1.4rem;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: none;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-primary {
+    background: var(--blue);
+    color: #000;
+  }
+
+  .btn-primary:hover {
+    background: #5ab0ff;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(59,158,255,0.3);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+    transform: translateY(-1px);
+  }
+
+  /* SCROLL INDICATOR */
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    animation: fadeUp 1s 1s ease both;
+  }
+
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--blue), transparent);
+    animation: scrollPulse 2s infinite;
+  }
+
+  /* SECTION */
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 6rem 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .section-label::after {
+    content: '';
+    height: 1px;
+    width: 40px;
+    background: var(--blue);
+    opacity: 0.4;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--white);
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+    line-height: 1.15;
+  }
+
+  .section-desc {
+    color: var(--text-dim);
+    font-size: 0.82rem;
+    line-height: 1.9;
+    max-width: 580px;
+  }
+
+  /* STATS BAR */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 4rem auto;
+    max-width: 1000px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .stat {
+    background: var(--surface);
+    padding: 1.6rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: var(--white);
+    letter-spacing: -0.03em;
+  }
+
+  .stat-value.blue { color: var(--blue); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.purple { color: var(--purple); }
+
+  .stat-label {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* STEPS */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  .steps::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 40px;
+    bottom: 40px;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--blue), var(--purple), var(--green));
+    opacity: 0.3;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 2rem;
+    padding: 2.5rem 0;
+    border-bottom: 1px solid rgba(30,42,56,0.5);
+    align-items: start;
+  }
+
+  .step:last-child { border-bottom: none; }
+
+  .step-num {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--blue);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step:nth-child(2) .step-num { color: var(--purple); border-color: rgba(124,92,191,0.3); }
+  .step:nth-child(3) .step-num { color: var(--green); border-color: rgba(63,185,80,0.3); }
+
+  .step-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .step-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .step-tag {
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--blue);
+  }
+
+  .step:nth-child(2) .step-tag { color: var(--purple); }
+  .step:nth-child(3) .step-tag { color: var(--green); }
+
+  .step-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--white);
+  }
+
+  .step-desc {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  .step-img {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .step-img:hover {
+    transform: scale(1.02) translateY(-4px);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 40px rgba(59,158,255,0.08);
+  }
+
+  /* STACK */
+  .stack-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    font-size: 0.8rem;
+    line-height: 1;
+    margin-top: 2rem;
+    overflow-x: auto;
+  }
+
+  .stack-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 8px;
+    margin-bottom: 2px;
+    transition: background 0.2s;
+  }
+
+  .stack-row:hover { background: rgba(59,158,255,0.04); }
+
+  .stack-icon { font-size: 1rem; }
+
+  .stack-name {
+    color: var(--white);
+    font-weight: 600;
+    flex: 1;
+  }
+
+  .stack-detail {
+    color: var(--text-dim);
+    font-size: 0.7rem;
+  }
+
+  .stack-arrow {
+    color: var(--blue);
+    opacity: 0.4;
+    font-size: 0.7rem;
+    padding: 0 0.5rem;
+  }
+
+  .stack-connector {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.2rem 0.8rem;
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+  }
+
+  .stack-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* TABLE */
+  .status-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+    font-size: 0.78rem;
+  }
+
+  .status-table th {
+    text-align: left;
+    padding: 0.6rem 1rem;
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  .status-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(30,42,56,0.4);
+    vertical-align: middle;
+  }
+
+  .status-table tr:last-child td { border-bottom: none; }
+  .status-table tr:hover td { background: rgba(59,158,255,0.02); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-green { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.2); }
+  .badge-yellow { background: rgba(210,153,34,0.12); color: var(--yellow); border: 1px solid rgba(210,153,34,0.2); }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 1.5rem;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .code-dots { display: flex; gap: 0.4rem; }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .code-dot:nth-child(1) { background: #ff5f57; }
+  .code-dot:nth-child(2) { background: #febc2e; }
+  .code-dot:nth-child(3) { background: #28c840; }
+
+  .code-title {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .code-body {
+    padding: 1.2rem 1.4rem;
+    font-size: 0.78rem;
+    line-height: 1.9;
+    overflow-x: auto;
+  }
+
+  .code-body .c-comment { color: #6e7b8a; }
+  .code-body .c-cmd { color: var(--blue); }
+  .code-body .c-flag { color: var(--purple); }
+  .code-body .c-path { color: var(--green); }
+  .code-body .c-prompt { color: var(--text-dim); }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 3rem 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .footer-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--white);
+  }
+
+  .footer-logo span { color: var(--blue); }
+
+  .footer-links {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+    flex-wrap: wrap;
+  }
+
+  .footer-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.72rem;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--blue); }
+
+  .footer-copy {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    width: 100%;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    max-width: 1000px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @keyframes scrollPulse {
+    0% { transform: scaleY(1); opacity: 1; }
+    100% { transform: scaleY(0.3); opacity: 0; }
+  }
+
+  /* SCROLL REVEAL */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* GLOW ORBS */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb-1 {
+    width: 400px; height: 400px;
+    background: rgba(59,158,255,0.06);
+    top: -100px; right: -100px;
+  }
+
+  .orb-2 {
+    width: 300px; height: 300px;
+    background: rgba(124,92,191,0.05);
+    bottom: 20%; left: -80px;
+  }
+
+  @media (max-width: 600px) {
+    .step { grid-template-columns: 1fr; }
+    .steps::before { display: none; }
+    nav { padding: 1rem; }
+    .nav-links { gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="rain"></canvas>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">s<span>3</span>ra<span>1</span>n</div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#steps">How It Works</a></li>
+    <li><a href="#install">Install</a></li>
+    <li><a href="https://github.com/noxbitx/s3ra1n" target="_blank">GitHub ↗</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero" id="about">
+  <img src="banner.png" alt="s3ra1n banner" class="hero-banner">
+  <div class="hero-badge">
+    <div class="dot"></div>
+    Confirmed working — iOS 16.7.10 · iPhone X · Galaxy S3
+  </div>
+  <h1 class="hero-title">A 2012 Android<br>jailbroke an <span>iPhone X</span></h1>
+  <p class="hero-sub">
+    palera1n running on a Samsung Galaxy S3 (ARMv7, 1GB RAM) running postmarketOS.
+    checkm8 hit on the first attempt. Officially "unsupported." Demonstrably works.
+  </p>
+  <div class="hero-cta">
+    <a href="#install" class="btn btn-primary">Get Started</a>
+    <a href="https://github.com/noxbitx/s3ra1n" class="btn btn-secondary" target="_blank">View on GitHub</a>
+  </div>
+  <div class="scroll-hint">
+    <span>scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats reveal">
+  <div class="stat">
+    <div class="stat-value blue">ARMv7</div>
+    <div class="stat-label">Host Architecture</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value green">1st try</div>
+    <div class="stat-label">checkm8 success</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">16.7.10</div>
+    <div class="stat-label">iOS Target</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value purple">2012</div>
+    <div class="stat-label">Host Device Year</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value blue">1GB</div>
+    <div class="stat-label">Host RAM</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- HOW IT WORKS -->
+<section id="steps">
+  <div class="section-label reveal">Process</div>
+  <h2 class="section-title reveal">Three steps.<br>One very cursed cable.</h2>
+  <p class="section-desc reveal">
+    The full chain: Pixel 4A → SSH → Galaxy S3 (postmarketOS) → USB OTG → iPhone X.
+    Each step documented with real screenshots from a live run.
+  </p>
+
+  <div class="steps" style="margin-top: 3rem;">
+
+    <div class="step reveal">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <div class="step-header">
+          <span class="step-tag">checkm8 · DFU · PongoOS</span>
+          <div class="step-name">Exploit fires. First try.</div>
+        </div>
+        <p class="step-desc">
+          The Galaxy S3's Linux USB host stack is precise enough to hit the checkm8 UaF race condition
+          reliably — something that takes 10–15 retries on x86 palen1x. PongoOS boots and displays
+          the palera1n boot logo on the iPhone screen.
+        </p>
+        <img src="step1.jpg" alt="palera1n boot logo on iPhone X" class="step-img">
+      </div>
+    </div>
+
+    <div class="step reveal">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <div class="step-header">
+          <span class="step-tag">KPF · Kernel · PongoOS commands</span>
+          <div class="step-name">Kernel loads. iPhone boots.</div>
+        </div>
+        <p class="step-desc">
+          PongoOS uploads the KPF module, patches the kernel, sets rootdev=md0, and fires bootx.
+          The verbose kernel boot fills the iPhone screen. The S3 terminal shows
+          "Booting Kernel..." and returns to prompt — job done.
+        </p>
+        <img src="step2.jpg" alt="Kernel booting on iPhone X" class="step-img">
+      </div>
+    </div>
+
+    <div class="step reveal">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <div class="step-header">
+          <span class="step-tag">Jailbroken · iCloud bypassed</span>
+          <div class="step-name">iPhone X. Unlocked.</div>
+        </div>
+        <p class="step-desc">
+          Fully booted into iOS with rootful palera1n jailbreak active and Broque Ramdisk iCloud bypass
+          persisted via system directory hooks. The Galaxy S3 is now a hardware key —
+          plug in to unlock after every reboot.
+        </p>
+        <img src="step3.jpg" alt="iPhone X successfully bypassed" class="step-img">
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STACK -->
+<section>
+  <div class="section-label reveal">Architecture</div>
+  <h2 class="section-title reveal">The full stack</h2>
+
+  <div class="stack-diagram reveal">
+    <div class="stack-row">
+      <span class="stack-icon">📱</span>
+      <span class="stack-name">Pixel 4A</span>
+      <span class="stack-detail">SSH client · tmux</span>
+    </div>
+    <div class="stack-connector">
+      <div class="stack-line"></div>
+      <span>SSH over WiFi</span>
+      <div class="stack-line"></div>
+    </div>
+    <div class="stack-row">
+      <span class="stack-icon">🤖</span>
+      <span class="stack-name">Samsung Galaxy S3 (GT-I9300)</span>
+      <span class="stack-detail">postmarketOS · ARMv7 · 1GB RAM</span>
+    </div>
+    <div class="stack-connector">
+      <div class="stack-line"></div>
+      <span>USB OTG · palera1n-linux-armel → usbmuxd → pymobiledevice3</span>
+      <div class="stack-line"></div>
+    </div>
+    <div class="stack-row">
+      <span class="stack-icon"></span>
+      <span class="stack-name">iPhone X (A11)</span>
+      <span class="stack-detail">iOS 16.7.10 · checkm8 · rootful palera1n</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STATUS TABLE -->
+<section>
+  <div class="section-label reveal">Compatibility</div>
+  <h2 class="section-title reveal">What works</h2>
+
+  <table class="status-table reveal">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>checkm8 exploit (Checkmate!)</td><td><span class="badge badge-green">✓ Confirmed</span></td></tr>
+      <tr><td>PongoOS boot</td><td><span class="badge badge-green">✓ Confirmed</span></td></tr>
+      <tr><td>Kernel boot</td><td><span class="badge badge-green">✓ Confirmed</span></td></tr>
+      <tr><td>Rootful jailbreak (-f)</td><td><span class="badge badge-green">✓ Confirmed</span></td></tr>
+      <tr><td>iCloud bypass (Broque Ramdisk)</td><td><span class="badge badge-green">✓ Confirmed</span></td></tr>
+      <tr><td>Rootless jailbreak (-l)</td><td><span class="badge badge-yellow">? Untested</span></td></tr>
+      <tr><td>--pongo-shell</td><td><span class="badge badge-yellow">? Untested</span></td></tr>
+      <tr><td>--force-revert</td><td><span class="badge badge-yellow">? Untested</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="divider"></div>
+
+<!-- INSTALL -->
+<section id="install">
+  <div class="section-label reveal">Quick Start</div>
+  <h2 class="section-title reveal">Get running in<br>three commands</h2>
+  <p class="section-desc reveal">
+    Uses the official palera1n v2.2.1 armel binary — statically linked, no compilation required.
+    Works on any ARMv7 Linux device.
+  </p>
+
+  <div class="code-block reveal">
+    <div class="code-header">
+      <div class="code-dots">
+        <div class="code-dot"></div>
+        <div class="code-dot"></div>
+        <div class="code-dot"></div>
+      </div>
+      <span class="code-title">bash — postmarketOS ARMv7</span>
+    </div>
+    <div class="code-body">
+      <div><span class="c-comment"># Download the binary from releases</span></div>
+      <div><span class="c-prompt">$ </span><span class="c-cmd">curl</span> -L https://github.com/noxbitx/s3ra1n/releases/latest/download/palera1n-linux-armel -o ~/palera1n</div>
+      <div><span class="c-prompt">$ </span><span class="c-cmd">chmod</span> +x ~/palera1n</div>
+      <br>
+      <div><span class="c-comment"># Kill usbmuxd — critical, don't skip this</span></div>
+      <div><span class="c-prompt">$ </span><span class="c-cmd">sudo</span> killall usbmuxd 2>/dev/null; <span class="c-cmd">sudo</span> rm -f /var/run/usbmuxd</div>
+      <br>
+      <div><span class="c-comment"># First run: create fakefs (-B flag)</span></div>
+      <div><span class="c-prompt">$ </span><span class="c-cmd">sudo</span> ~/palera1n <span class="c-flag">-f -B</span></div>
+      <br>
+      <div><span class="c-comment"># Every reboot after: just re-run without -B</span></div>
+      <div><span class="c-prompt">$ </span><span class="c-cmd">sudo</span> ~/palera1n <span class="c-flag">-f</span></div>
+    </div>
+  </div>
+
+  <div style="margin-top: 1.5rem; padding: 1rem 1.2rem; border-radius: 8px; border: 1px solid rgba(210,153,34,0.2); background: rgba(210,153,34,0.04); font-size: 0.75rem; color: var(--yellow); line-height: 1.8;" class="reveal">
+    ⚠ Charge your iPhone to at least 30% before starting. Battery death during PongoOS boot can corrupt the fakefs partition.
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">s<span>3</span>ra<span>1</span>n</div>
+  <ul class="footer-links">
+    <li><a href="https://github.com/noxbitx/s3ra1n" target="_blank">GitHub</a></li>
+    <li><a href="https://github.com/palera1n/palera1n" target="_blank">palera1n</a></li>
+    <li><a href="https://postmarketos.org" target="_blank">postmarketOS</a></li>
+  </ul>
+  <p class="footer-copy">
+    Built by Noxbit · Officially "unsupported." Demonstrably works. · 2026
+  </p>
+</footer>
+
+<script>
+// RAIN EFFECT
+const canvas = document.getElementById('rain');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const drops = Array.from({length: 80}, () => ({
+  x: Math.random() * window.innerWidth,
+  y: Math.random() * window.innerHeight,
+  speed: 1.5 + Math.random() * 3,
+  length: 10 + Math.random() * 20,
+  opacity: 0.2 + Math.random() * 0.5
+}));
+
+function drawRain() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drops.forEach(d => {
+    ctx.beginPath();
+    ctx.moveTo(d.x, d.y);
+    ctx.lineTo(d.x - d.length * 0.2, d.y + d.length);
+    ctx.strokeStyle = `rgba(59,158,255,${d.opacity})`;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+    d.y += d.speed;
+    if (d.y > canvas.height + 30) {
+      d.y = -30;
+      d.x = Math.random() * canvas.width;
+    }
+  });
+  requestAnimationFrame(drawRain);
+}
+drawRain();
+
+// SCROLL REVEAL
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 60);
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
