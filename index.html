@@ -623,6 +623,11 @@
   }
 
   /* ANIMATIONS */
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
@@ -703,7 +708,7 @@
     <div class="dot"></div>
     Confirmed working — iOS 16.7.10 · iPhone X · Galaxy S3
   </div>
-  <h1 class="hero-title">A 2012 Android<br>jailbroke an <span>iPhone X</span></h1>
+  <h1 class="hero-title">palera1n <span>reimagined</span><br>for ARMv7 Linux</h1>
   <p class="hero-sub">
     palera1n running on a Samsung Galaxy S3 (ARMv7, 1GB RAM) running postmarketOS.
     checkm8 hit on the first attempt. Officially "unsupported." Demonstrably works.
@@ -874,10 +879,10 @@
 <!-- INSTALL -->
 <section id="install">
   <div class="section-label reveal">Quick Start</div>
-  <h2 class="section-title reveal">Get running in<br>three commands</h2>
+  <h2 class="section-title reveal">Get running with<br>the Python CLI</h2>
   <p class="section-desc reveal">
-    Uses the official palera1n v2.2.1 armel binary — statically linked, no compilation required.
-    Works on any ARMv7 Linux device.
+    s3ra1n ships as a Python wrapper around the official palera1n v2.2.1 armel binary.
+    Clone the repo, drop the binary, run the script — interactive menu handles everything else.
   </p>
 
   <div class="code-block reveal">
@@ -890,18 +895,43 @@
       <span class="code-title">bash — postmarketOS ARMv7</span>
     </div>
     <div class="code-body">
-      <div><span class="c-comment"># Download the binary from releases</span></div>
-      <div><span class="c-prompt">$ </span><span class="c-cmd">curl</span> -L https://github.com/noxbitx/s3ra1n/releases/latest/download/palera1n-linux-armel -o ~/palera1n</div>
+      <div><span class="c-comment"># 1. Clone the repo</span></div>
+      <div><span class="c-prompt">$ </span><span class="c-cmd">git</span> clone https://github.com/noxbitx/s3ra1n &amp;&amp; <span class="c-cmd">cd</span> s3ra1n</div>
+      <br>
+      <div><span class="c-comment"># 2. Download palera1n binary (or use menu option 14)</span></div>
+      <div><span class="c-prompt">$ </span><span class="c-cmd">curl</span> -L https://github.com/palera1n/palera1n/releases/download/v2.2.1/palera1n-linux-armel -o ~/palera1n</div>
       <div><span class="c-prompt">$ </span><span class="c-cmd">chmod</span> +x ~/palera1n</div>
       <br>
-      <div><span class="c-comment"># Kill usbmuxd — critical, don't skip this</span></div>
-      <div><span class="c-prompt">$ </span><span class="c-cmd">sudo</span> killall usbmuxd 2>/dev/null; <span class="c-cmd">sudo</span> rm -f /var/run/usbmuxd</div>
+      <div><span class="c-comment"># 3. Launch the CLI — auto-detects the binary</span></div>
+      <div><span class="c-prompt">$ </span><span class="c-cmd">python3</span> <span class="c-path">s3ra1n.py</span></div>
       <br>
-      <div><span class="c-comment"># First run: create fakefs (-B flag)</span></div>
-      <div><span class="c-prompt">$ </span><span class="c-cmd">sudo</span> ~/palera1n <span class="c-flag">-f -B</span></div>
-      <br>
-      <div><span class="c-comment"># Every reboot after: just re-run without -B</span></div>
-      <div><span class="c-prompt">$ </span><span class="c-cmd">sudo</span> ~/palera1n <span class="c-flag">-f</span></div>
+      <div><span class="c-comment"># The menu handles usbmuxd kill automatically before every run.</span></div>
+      <div><span class="c-comment"># First jailbreak: pick option 3 (Setup → Create fakefs)</span></div>
+      <div><span class="c-comment"># Every reboot after: pick option 1 (Jailbreak → Rootful)</span></div>
+    </div>
+  </div>
+
+  <div class="code-block reveal" style="margin-top: 1rem;">
+    <div class="code-header">
+      <div class="code-dots">
+        <div class="code-dot"></div>
+        <div class="code-dot"></div>
+        <div class="code-dot"></div>
+      </div>
+      <span class="code-title">s3ra1n v2.2.1 — menu preview</span>
+    </div>
+    <div class="code-body" style="color: #6e7b8a;">
+      <div style="color:#c9d1d9; margin-bottom:0.6rem;"><span style="color:#7c5cbf;">s3ra1n</span> v2.2.0 — Universal ARMv7 &nbsp;<span style="color:#3b9eff;">●</span> palera1n found: /tmp/palera1n-v221-armel</div>
+      <div style="color:#f0f6fc; margin-bottom:0.4rem;">Select an option:</div>
+      <div><span style="color:#3fb950;"> 1.</span>  <span style="color:#3fb950;">Jailbreak</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rootful <span style="color:#6e7b8a;">(-f)</span></div>
+      <div><span style="color:#3fb950;"> 2.</span>  <span style="color:#3fb950;">Jailbreak</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Rootless <span style="color:#6e7b8a;">(-l)</span></div>
+      <div><span style="color:#d29922;"> 3.</span>  <span style="color:#d29922;">Setup</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Create fakefs <span style="color:#6e7b8a;">(-f -B)</span></div>
+      <div><span style="color:#3b9eff;"> 5.</span>  <span style="color:#3b9eff;">Boot</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PongoOS shell <span style="color:#6e7b8a;">(--pongo-shell)</span></div>
+      <div><span style="color:#3b9eff;">12.</span>  <span style="color:#6e7b8a;">Tools</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Start usbmuxd only</div>
+      <div><span style="color:#3b9eff;">13.</span>  <span style="color:#6e7b8a;">Tools</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Kill usbmuxd only</div>
+      <div><span style="color:#3b9eff;">14.</span>  <span style="color:#6e7b8a;">Tools</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Download palera1n binary</div>
+      <div style="margin-top:0.6rem;"><span style="color:#f85149;">11.</span>  <span style="color:#f85149;">Danger</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Force revert jailbreak <span style="color:#6e7b8a;">(--force-revert)</span></div>
+      <div style="margin-top:0.8rem;"><span style="color:#3b9eff;">s3ra1n</span> <span style="color:#6e7b8a;">›</span> <span style="animation: blink 1s infinite;">█</span></div>
     </div>
   </div>
 
